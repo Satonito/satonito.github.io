@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="谈谈你对Java的理解平台无关性 GC 语言特性（泛型，反射） 面向对象 类库 异常处理 平台无关性如果实现java平台性Java源码首先被编译成字节码，再由不同平台的JVM进行解析，Java语言在不同的平台上运行时不需要进行重新编译,Java虚拟机在执行字节码的时候，把字节码转换成具体平台上的机器指令  为什么JVM不直接将源码解析成机器码去执行准备工作：每次执行都需要各种检查 兼容性：也可以将">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java底层知识：JVM">
+<meta property="og:url" content="https://satonito.club/2019/03/24/Java底层知识：JVM/index.html">
+<meta property="og:site_name" content="博客">
+<meta property="og:description" content="谈谈你对Java的理解平台无关性 GC 语言特性（泛型，反射） 面向对象 类库 异常处理 平台无关性如果实现java平台性Java源码首先被编译成字节码，再由不同平台的JVM进行解析，Java语言在不同的平台上运行时不需要进行重新编译,Java虚拟机在执行字节码的时候，把字节码转换成具体平台上的机器指令  为什么JVM不直接将源码解析成机器码去执行准备工作：每次执行都需要各种检查 兼容性：也可以将">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://satonito.club/2019/03/24/Java底层知识：JVM/2019-03-24_152850.png">
+<meta property="og:image" content="https://satonito.club/2019/03/24/Java底层知识：JVM/2019-03-24_153610.png">
+<meta property="og:image" content="https://satonito.club/2019/03/24/Java底层知识：JVM/2019-03-24_154853.png">
+<meta property="og:image" content="https://satonito.club/2019/03/24/Java底层知识：JVM/2019-03-24_161159.png">
+<meta property="og:updated_time" content="2019-03-24T15:37:06.445Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java底层知识：JVM">
+<meta name="twitter:description" content="谈谈你对Java的理解平台无关性 GC 语言特性（泛型，反射） 面向对象 类库 异常处理 平台无关性如果实现java平台性Java源码首先被编译成字节码，再由不同平台的JVM进行解析，Java语言在不同的平台上运行时不需要进行重新编译,Java虚拟机在执行字节码的时候，把字节码转换成具体平台上的机器指令  为什么JVM不直接将源码解析成机器码去执行准备工作：每次执行都需要各种检查 兼容性：也可以将">
+<meta name="twitter:image" content="https://satonito.club/2019/03/24/Java底层知识：JVM/2019-03-24_152850.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://satonito.club/2019/03/24/Java底层知识：JVM/">
+
+
+
+
+
+  <title>Java底层知识：JVM | 博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://satonito.club/2019/03/24/Java底层知识：JVM/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Satonito">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Java底层知识：JVM</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-03-24T14:46:35+08:00">
+                2019-03-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2019/03/24/Java底层知识：JVM/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count gitment-comments-count" data-xid="/2019/03/24/Java底层知识：JVM/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="谈谈你对Java的理解"><a href="#谈谈你对Java的理解" class="headerlink" title="谈谈你对Java的理解"></a>谈谈你对Java的理解</h1><p>平台无关性</p>
+<p>GC</p>
+<p>语言特性（泛型，反射）</p>
+<p>面向对象</p>
+<p>类库</p>
+<p>异常处理</p>
+<h1 id="平台无关性"><a href="#平台无关性" class="headerlink" title="平台无关性"></a>平台无关性</h1><h2 id="如果实现java平台性"><a href="#如果实现java平台性" class="headerlink" title="如果实现java平台性"></a>如果实现java平台性</h2><p>Java源码首先被编译成字节码，再由不同平台的JVM进行解析，Java语言在不同的平台上运行时不需要进行重新编译,Java虚拟机在执行字节码的时候，把字节码转换成具体平台上的机器指令</p>
+<p><img src="/2019/03/24/Java底层知识：JVM/2019-03-24_152850.png" alt></p>
+<h2 id="为什么JVM不直接将源码解析成机器码去执行"><a href="#为什么JVM不直接将源码解析成机器码去执行" class="headerlink" title="为什么JVM不直接将源码解析成机器码去执行"></a>为什么JVM不直接将源码解析成机器码去执行</h2><p>准备工作：每次执行都需要各种检查</p>
+<p>兼容性：也可以将别的语言解析成字节码</p>
+<h2 id="JVM如果加载-class文件"><a href="#JVM如果加载-class文件" class="headerlink" title="JVM如果加载.class文件"></a>JVM如果加载.class文件</h2><p><img src="/2019/03/24/Java底层知识：JVM/2019-03-24_153610.png" alt><br>Class Loadr:依据特定格式，加载class文件到内存<br>Execution Engine：对命令进行解析<br>Native Interface：融合不同开发语言的原生库为Java所用</p>
+<h2 id="谈谈反射"><a href="#谈谈反射" class="headerlink" title="谈谈反射"></a>谈谈反射</h2><p>JAVA反射机制是在运行状态中，对于任意一个类，都能够知道这个类的所有属性和方法；对于任意一个对象，都能够调用它的任意一个方法；简单说就是，只要给定类的名字，那么就可以通过反射机制来获得类的所有信息。</p>
+<h2 id="反射的简单例子"><a href="#反射的简单例子" class="headerlink" title="反射的简单例子"></a>反射的简单例子</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br><span class="line">299</span><br><span class="line">300</span><br><span class="line">301</span><br><span class="line">302</span><br><span class="line">303</span><br><span class="line">304</span><br><span class="line">305</span><br><span class="line">306</span><br><span class="line">307</span><br><span class="line">308</span><br><span class="line">309</span><br><span class="line">310</span><br></pre></td><td class="code"><pre><span class="line">package cn.lee.demo;  </span><br><span class="line">  </span><br><span class="line">import java.lang.reflect.Constructor;  </span><br><span class="line">import java.lang.reflect.Field;  </span><br><span class="line">import java.lang.reflect.InvocationTargetException;  </span><br><span class="line">import java.lang.reflect.Method;  </span><br><span class="line">import java.lang.reflect.Modifier;  </span><br><span class="line">import java.lang.reflect.TypeVariable;  </span><br><span class="line">  </span><br><span class="line">public class Main &#123;  </span><br><span class="line">    /** </span><br><span class="line">     * 为了看清楚Java反射部分代码，所有异常我都最后抛出来给虚拟机处理！ </span><br><span class="line">     * @param args </span><br><span class="line">     * @throws ClassNotFoundException </span><br><span class="line">     * @throws InstantiationException </span><br><span class="line">     * @throws IllegalAccessException </span><br><span class="line">     * @throws InvocationTargetException  </span><br><span class="line">     * @throws IllegalArgumentException  </span><br><span class="line">     * @throws NoSuchFieldException  </span><br><span class="line">     * @throws SecurityException  </span><br><span class="line">     * @throws NoSuchMethodException  </span><br><span class="line">     */  </span><br><span class="line">    public static void main(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, SecurityException, NoSuchFieldException, NoSuchMethodException &#123;  </span><br><span class="line">        // TODO Auto-generated method stub  </span><br><span class="line">          </span><br><span class="line">        //Demo1.  通过Java反射机制得到类的包名和类名  </span><br><span class="line">        Demo1();  </span><br><span class="line">        System.out.println(&quot;===============================================&quot;);  </span><br><span class="line">          </span><br><span class="line">        //Demo2.  验证所有的类都是Class类的实例对象  </span><br><span class="line">        Demo2();  </span><br><span class="line">        System.out.println(&quot;===============================================&quot;);  </span><br><span class="line">          </span><br><span class="line">        //Demo3.  通过Java反射机制，用Class 创建类对象[这也就是反射存在的意义所在]，无参构造  </span><br><span class="line">        Demo3();  </span><br><span class="line">        System.out.println(&quot;===============================================&quot;);  </span><br><span class="line">          </span><br><span class="line">        //Demo4:  通过Java反射机制得到一个类的构造函数，并实现构造带参实例对象  </span><br><span class="line">        Demo4();  </span><br><span class="line">        System.out.println(&quot;===============================================&quot;);  </span><br><span class="line">          </span><br><span class="line">        //Demo5:  通过Java反射机制操作成员变量, set 和 get  </span><br><span class="line">        Demo5();  </span><br><span class="line">        System.out.println(&quot;===============================================&quot;);  </span><br><span class="line">          </span><br><span class="line">        //Demo6: 通过Java反射机制得到类的一些属性： 继承的接口，父类，函数信息，成员信息，类型等  </span><br><span class="line">        Demo6();  </span><br><span class="line">        System.out.println(&quot;===============================================&quot;);  </span><br><span class="line">          </span><br><span class="line">        //Demo7: 通过Java反射机制调用类中方法  </span><br><span class="line">        Demo7();  </span><br><span class="line">        System.out.println(&quot;===============================================&quot;);  </span><br><span class="line">          </span><br><span class="line">        //Demo8: 通过Java反射机制获得类加载器  </span><br><span class="line">        Demo8();  </span><br><span class="line">        System.out.println(&quot;===============================================&quot;);  </span><br><span class="line">          </span><br><span class="line">    &#125;  </span><br><span class="line">      </span><br><span class="line">    /** </span><br><span class="line">     * Demo1: 通过Java反射机制得到类的包名和类名 </span><br><span class="line">     */  </span><br><span class="line">    public static void Demo1()  </span><br><span class="line">    &#123;  </span><br><span class="line">        Person person = new Person();  </span><br><span class="line">        System.out.println(&quot;Demo1: 包名: &quot; + person.getClass().getPackage().getName() + &quot;，&quot;   </span><br><span class="line">                + &quot;完整类名: &quot; + person.getClass().getName());  </span><br><span class="line">    &#125;  </span><br><span class="line">      </span><br><span class="line">    /** </span><br><span class="line">     * Demo2: 验证所有的类都是Class类的实例对象 </span><br><span class="line">     * @throws ClassNotFoundException  </span><br><span class="line">     */  </span><br><span class="line">    public static void Demo2() throws ClassNotFoundException  </span><br><span class="line">    &#123;  </span><br><span class="line">        //定义两个类型都未知的Class , 设置初值为null, 看看如何给它们赋值成Person类  </span><br><span class="line">        Class&lt;?&gt; class1 = null;  </span><br><span class="line">        Class&lt;?&gt; class2 = null;  </span><br><span class="line">          </span><br><span class="line">        //写法1, 可能抛出 ClassNotFoundException [多用这个写法]  </span><br><span class="line">        class1 = Class.forName(&quot;cn.lee.demo.Person&quot;);  </span><br><span class="line">        System.out.println(&quot;Demo2:(写法1) 包名: &quot; + class1.getPackage().getName() + &quot;，&quot;   </span><br><span class="line">                + &quot;完整类名: &quot; + class1.getName());  </span><br><span class="line">          </span><br><span class="line">        //写法2  </span><br><span class="line">        class2 = Person.class;  </span><br><span class="line">        System.out.println(&quot;Demo2:(写法2) 包名: &quot; + class2.getPackage().getName() + &quot;，&quot;   </span><br><span class="line">                + &quot;完整类名: &quot; + class2.getName());  </span><br><span class="line">    &#125;  </span><br><span class="line">      </span><br><span class="line">    /** </span><br><span class="line">     * Demo3: 通过Java反射机制，用Class 创建类对象[这也就是反射存在的意义所在] </span><br><span class="line">     * @throws ClassNotFoundException  </span><br><span class="line">     * @throws IllegalAccessException  </span><br><span class="line">     * @throws InstantiationException  </span><br><span class="line">     */  </span><br><span class="line">    public static void Demo3() throws ClassNotFoundException, InstantiationException, IllegalAccessException  </span><br><span class="line">    &#123;  </span><br><span class="line">        Class&lt;?&gt; class1 = null;  </span><br><span class="line">        class1 = Class.forName(&quot;cn.lee.demo.Person&quot;);  </span><br><span class="line">        //由于这里不能带参数，所以你要实例化的这个类Person，一定要有无参构造函数哈～  </span><br><span class="line">        Person person = (Person) class1.newInstance();  </span><br><span class="line">        person.setAge(20);  </span><br><span class="line">        person.setName(&quot;LeeFeng&quot;);  </span><br><span class="line">        System.out.println(&quot;Demo3: &quot; + person.getName() + &quot; : &quot; + person.getAge());  </span><br><span class="line">    &#125;  </span><br><span class="line">      </span><br><span class="line">    /** </span><br><span class="line">     * Demo4: 通过Java反射机制得到一个类的构造函数，并实现创建带参实例对象 </span><br><span class="line">     * @throws ClassNotFoundException  </span><br><span class="line">     * @throws InvocationTargetException  </span><br><span class="line">     * @throws IllegalAccessException  </span><br><span class="line">     * @throws InstantiationException  </span><br><span class="line">     * @throws IllegalArgumentException  </span><br><span class="line">     */  </span><br><span class="line">    public static void Demo4() throws ClassNotFoundException, IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException  </span><br><span class="line">    &#123;  </span><br><span class="line">        Class&lt;?&gt; class1 = null;  </span><br><span class="line">        Person person1 = null;  </span><br><span class="line">        Person person2 = null;  </span><br><span class="line">          </span><br><span class="line">        class1 = Class.forName(&quot;cn.lee.demo.Person&quot;);  </span><br><span class="line">        //得到一系列构造函数集合  </span><br><span class="line">        Constructor&lt;?&gt;[] constructors = class1.getConstructors();  </span><br><span class="line">          </span><br><span class="line">        person1 = (Person) constructors[0].newInstance();  </span><br><span class="line">        person1.setAge(30);  </span><br><span class="line">        person1.setName(&quot;leeFeng&quot;);  </span><br><span class="line">          </span><br><span class="line">        person2 = (Person) constructors[1].newInstance(20,&quot;leeFeng&quot;);  </span><br><span class="line">          </span><br><span class="line">        System.out.println(&quot;Demo4: &quot; + person1.getName() + &quot; : &quot; + person1.getAge()  </span><br><span class="line">                + &quot;  ,   &quot; + person2.getName() + &quot; : &quot; + person2.getAge()  </span><br><span class="line">                );  </span><br><span class="line">          </span><br><span class="line">    &#125;  </span><br><span class="line">      </span><br><span class="line">    /** </span><br><span class="line">     * Demo5: 通过Java反射机制操作成员变量, set 和 get </span><br><span class="line">     *  </span><br><span class="line">     * @throws IllegalAccessException  </span><br><span class="line">     * @throws IllegalArgumentException  </span><br><span class="line">     * @throws NoSuchFieldException  </span><br><span class="line">     * @throws SecurityException  </span><br><span class="line">     * @throws InstantiationException  </span><br><span class="line">     * @throws ClassNotFoundException  </span><br><span class="line">     */  </span><br><span class="line">    public static void Demo5() throws IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException, InstantiationException, ClassNotFoundException  </span><br><span class="line">    &#123;  </span><br><span class="line">        Class&lt;?&gt; class1 = null;  </span><br><span class="line">        class1 = Class.forName(&quot;cn.lee.demo.Person&quot;);  </span><br><span class="line">        Object obj = class1.newInstance();  </span><br><span class="line">          </span><br><span class="line">        Field personNameField = class1.getDeclaredField(&quot;name&quot;);  </span><br><span class="line">        personNameField.setAccessible(true);  </span><br><span class="line">        personNameField.set(obj, &quot;胖虎先森&quot;);  </span><br><span class="line">          </span><br><span class="line">          </span><br><span class="line">        System.out.println(&quot;Demo5: 修改属性之后得到属性变量的值：&quot; + personNameField.get(obj));  </span><br><span class="line">          </span><br><span class="line">    &#125;  </span><br><span class="line">      </span><br><span class="line">  </span><br><span class="line">    /** </span><br><span class="line">     * Demo6: 通过Java反射机制得到类的一些属性： 继承的接口，父类，函数信息，成员信息，类型等 </span><br><span class="line">     * @throws ClassNotFoundException  </span><br><span class="line">     */  </span><br><span class="line">    public static void Demo6() throws ClassNotFoundException  </span><br><span class="line">    &#123;  </span><br><span class="line">        Class&lt;?&gt; class1 = null;  </span><br><span class="line">        class1 = Class.forName(&quot;cn.lee.demo.SuperMan&quot;);  </span><br><span class="line">          </span><br><span class="line">        //取得父类名称  </span><br><span class="line">        Class&lt;?&gt;  superClass = class1.getSuperclass();  </span><br><span class="line">        System.out.println(&quot;Demo6:  SuperMan类的父类名: &quot; + superClass.getName());  </span><br><span class="line">          </span><br><span class="line">        System.out.println(&quot;===============================================&quot;);  </span><br><span class="line">          </span><br><span class="line">          </span><br><span class="line">        Field[] fields = class1.getDeclaredFields();  </span><br><span class="line">        for (int i = 0; i &lt; fields.length; i++) &#123;  </span><br><span class="line">            System.out.println(&quot;类中的成员: &quot; + fields[i]);  </span><br><span class="line">        &#125;  </span><br><span class="line">        System.out.println(&quot;===============================================&quot;);  </span><br><span class="line">          </span><br><span class="line">          </span><br><span class="line">        //取得类方法  </span><br><span class="line">        Method[] methods = class1.getDeclaredMethods();  </span><br><span class="line">        for (int i = 0; i &lt; methods.length; i++) &#123;  </span><br><span class="line">            System.out.println(&quot;Demo6,取得SuperMan类的方法：&quot;);  </span><br><span class="line">            System.out.println(&quot;函数名：&quot; + methods[i].getName());  </span><br><span class="line">            System.out.println(&quot;函数返回类型：&quot; + methods[i].getReturnType());  </span><br><span class="line">            System.out.println(&quot;函数访问修饰符：&quot; + Modifier.toString(methods[i].getModifiers()));  </span><br><span class="line">            System.out.println(&quot;函数代码写法： &quot; + methods[i]);  </span><br><span class="line">        &#125;  </span><br><span class="line">          </span><br><span class="line">        System.out.println(&quot;===============================================&quot;);  </span><br><span class="line">          </span><br><span class="line">        //取得类实现的接口,因为接口类也属于Class,所以得到接口中的方法也是一样的方法得到哈  </span><br><span class="line">        Class&lt;?&gt; interfaces[] = class1.getInterfaces();  </span><br><span class="line">        for (int i = 0; i &lt; interfaces.length; i++) &#123;  </span><br><span class="line">            System.out.println(&quot;实现的接口类名: &quot; + interfaces[i].getName() );  </span><br><span class="line">        &#125;  </span><br><span class="line">          </span><br><span class="line">    &#125;  </span><br><span class="line">      </span><br><span class="line">    /** </span><br><span class="line">     * Demo7: 通过Java反射机制调用类方法 </span><br><span class="line">     * @throws ClassNotFoundException  </span><br><span class="line">     * @throws NoSuchMethodException  </span><br><span class="line">     * @throws SecurityException  </span><br><span class="line">     * @throws InvocationTargetException  </span><br><span class="line">     * @throws IllegalAccessException  </span><br><span class="line">     * @throws IllegalArgumentException  </span><br><span class="line">     * @throws InstantiationException  </span><br><span class="line">     */  </span><br><span class="line">    public static void Demo7() throws ClassNotFoundException, SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException, InstantiationException  </span><br><span class="line">    &#123;  </span><br><span class="line">        Class&lt;?&gt; class1 = null;  </span><br><span class="line">        class1 = Class.forName(&quot;cn.lee.demo.SuperMan&quot;);  </span><br><span class="line">          </span><br><span class="line">        System.out.println(&quot;Demo7: \n调用无参方法fly()：&quot;);  </span><br><span class="line">        Method method = class1.getMethod(&quot;fly&quot;);  </span><br><span class="line">        method.invoke(class1.newInstance());  </span><br><span class="line">          </span><br><span class="line">        System.out.println(&quot;调用有参方法walk(int m)：&quot;);  </span><br><span class="line">        method = class1.getMethod(&quot;walk&quot;,int.class);  </span><br><span class="line">        method.invoke(class1.newInstance(),100);  </span><br><span class="line">    &#125;  </span><br><span class="line">      </span><br><span class="line">    /** </span><br><span class="line">     * Demo8: 通过Java反射机制得到类加载器信息 </span><br><span class="line">     *  </span><br><span class="line">     * 在java中有三种类类加载器。[这段资料网上截取] </span><br><span class="line"> </span><br><span class="line">        1）Bootstrap ClassLoader 此加载器采用c++编写，一般开发中很少见。 </span><br><span class="line"> </span><br><span class="line">        2）Extension ClassLoader 用来进行扩展类的加载，一般对应的是jre\lib\ext目录中的类 </span><br><span class="line"> </span><br><span class="line">        3）AppClassLoader 加载classpath指定的类，是最常用的加载器。同时也是java中默认的加载器。 </span><br><span class="line">     *  </span><br><span class="line">     * @throws ClassNotFoundException  </span><br><span class="line">     */  </span><br><span class="line">    public static void Demo8() throws ClassNotFoundException  </span><br><span class="line">    &#123;  </span><br><span class="line">        Class&lt;?&gt; class1 = null;  </span><br><span class="line">        class1 = Class.forName(&quot;cn.lee.demo.SuperMan&quot;);  </span><br><span class="line">        String nameString = class1.getClassLoader().getClass().getName();  </span><br><span class="line">          </span><br><span class="line">        System.out.println(&quot;Demo8: 类加载器类名: &quot; + nameString);  </span><br><span class="line">    &#125;  </span><br><span class="line">      </span><br><span class="line">      </span><br><span class="line">      </span><br><span class="line">&#125;  </span><br><span class="line">/** </span><br><span class="line"> *  </span><br><span class="line"> * @author xiaoyaomeng </span><br><span class="line"> * </span><br><span class="line"> */  </span><br><span class="line">class  Person&#123;  </span><br><span class="line">    private int age;  </span><br><span class="line">    private String name;  </span><br><span class="line">    public Person()&#123;  </span><br><span class="line">          </span><br><span class="line">    &#125;  </span><br><span class="line">    public Person(int age, String name)&#123;  </span><br><span class="line">        this.age = age;  </span><br><span class="line">        this.name = name;  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    public int getAge() &#123;  </span><br><span class="line">        return age;  </span><br><span class="line">    &#125;  </span><br><span class="line">    public void setAge(int age) &#123;  </span><br><span class="line">        this.age = age;  </span><br><span class="line">    &#125;  </span><br><span class="line">    public String getName() &#123;  </span><br><span class="line">        return name;  </span><br><span class="line">    &#125;  </span><br><span class="line">    public void setName(String name) &#123;  </span><br><span class="line">        this.name = name;  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line">class SuperMan extends Person implements ActionInterface  </span><br><span class="line">&#123;  </span><br><span class="line">    private boolean BlueBriefs;  </span><br><span class="line">      </span><br><span class="line">    public void fly()  </span><br><span class="line">    &#123;  </span><br><span class="line">        System.out.println(&quot;超人会飞耶～～&quot;);  </span><br><span class="line">    &#125;  </span><br><span class="line">      </span><br><span class="line">    public boolean isBlueBriefs() &#123;  </span><br><span class="line">        return BlueBriefs;  </span><br><span class="line">    &#125;  </span><br><span class="line">    public void setBlueBriefs(boolean blueBriefs) &#123;  </span><br><span class="line">        BlueBriefs = blueBriefs;  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    @Override  </span><br><span class="line">    public void walk(int m) &#123;  </span><br><span class="line">        // TODO Auto-generated method stub  </span><br><span class="line">        System.out.println(&quot;超人会走耶～～走了&quot; + m + &quot;米就走不动了！&quot;);  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line">interface ActionInterface&#123;  </span><br><span class="line">    public void walk(int m);  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="类的加载方式"><a href="#类的加载方式" class="headerlink" title="类的加载方式"></a>类的加载方式</h2><ol>
+<li>隐式加载：new</li>
+<li>显式加载：loadClass和forName</li>
+</ol>
+<p><img src="/2019/03/24/Java底层知识：JVM/2019-03-24_154853.png" alt></p>
+<p>##Java内存模型之线程独占部分</p>
+<h1 id="类加载器的双亲委派机制"><a href="#类加载器的双亲委派机制" class="headerlink" title="类加载器的双亲委派机制"></a>类加载器的双亲委派机制</h1><h2 id="java类加载器分类详解"><a href="#java类加载器分类详解" class="headerlink" title="java类加载器分类详解"></a>java类加载器分类详解</h2><ol>
+<li><p>Bootstrap ClassLoader：启动类加载器，也叫根类加载器，<strong>负责加载java的核心类库，例如(%JAVA_HOME%/lib)目录下的rt.jar（包含System，String这样的核心类）</strong>，根类加载器非常特殊，它不是java.lang.ClassLoader的子类，它是JVM自身内部由C/C++实现的，并不是java实现的。</p>
+</li>
+<li><p>Extension ClassLoader：<strong>扩展类加载器，负责加载扩展目录(%JAVA_HOME%/jre/lib/ext)下的jar包</strong>，用户可以把自己开发的类打包成jar包放在这个目录下即可扩展核心类以外的功能</p>
+</li>
+<li><p>System ClassLoader\APP ClassLoader，<strong>系统类加载器，又称为应用程序类加载器，是加载CLASSPATH环境变量下所指定的jar包与类路径</strong>，一般来说，用户自定义的就是由APP ClassLoader加载的</p>
+</li>
+</ol>
+<h2 id="类加载器的双亲委派加载机制"><a href="#类加载器的双亲委派加载机制" class="headerlink" title="类加载器的双亲委派加载机制"></a>类加载器的双亲委派加载机制</h2><p>&emsp;&emsp;当一个类收到了类加载请求，他首先不会尝试自己去加载这个类，而是把这个请求<strong>委派给父类去完成</strong>，每一个层次类加载都是如此，因此所有的加载请求都应该传送到启动类加载器中，只有当父类加载器反馈自己无法完成这个请求的时候（在它的加载路径里找不到这个所需要加载的类），子类加载器才会尝试自己去加载</p>
+<h2 id="双亲委派模型的源码实现"><a href="#双亲委派模型的源码实现" class="headerlink" title="双亲委派模型的源码实现"></a>双亲委派模型的源码实现</h2><p>&emsp;&emsp;主要体现在ClassLoader的<strong>loadClass()方法</strong>，思路很简单：先检查是否已经被加载，若没有被加载则调用父类的LoadClass()方法，若父类加载器为空，则默认使用启动类加载器作为父类加载器，如果父类加载器加载失败，抛出<strong>ClassNotFoundException异常</strong>后，调用自己的<strong>findClass()方法</strong>进行加载。</p>
+<h2 id="为什么要使用双亲委派机制去加载类"><a href="#为什么要使用双亲委派机制去加载类" class="headerlink" title="为什么要使用双亲委派机制去加载类"></a>为什么要使用双亲委派机制去加载类</h2><p>避免同样的字节码被多次加载</p>
+<h2 id="JVM-三大性能调优参数-Xms-Xmx-Xss"><a href="#JVM-三大性能调优参数-Xms-Xmx-Xss" class="headerlink" title="JVM 三大性能调优参数-Xms -Xmx -Xss"></a>JVM 三大性能调优参数-Xms -Xmx -Xss</h2><p>-Xss规定了每个线程堆栈的大小。一般情况下256K是足够了。影响了此进程中并发线程数大小。</p>
+<p>-Xms初始的Heap的大小。</p>
+<p>-Xmx最大Heap的大小。</p>
+<p>在很多情况下，-Xms和-Xmx设置成一样的。这么设置，是因为当Heap不够用时，会发生内存抖动，影响程序运行稳定性。</p>
+<h2 id="Java三种内存分配策略"><a href="#Java三种内存分配策略" class="headerlink" title="Java三种内存分配策略"></a>Java三种内存分配策略</h2><p>静态的，就是在变量在编译时已经确定大小并且已经生成。</p>
+<p>栈式的，就是在变量在编译时已经确定大小但是在程序运行时才生成。比如函数中的变量，参数，只有等函数被调用了才生成。但是大小是在编译时就已知了。</p>
+<p>堆式的，就是在变量在运行时才确定大小并且生成。比如NEW()的使用</p>
+<h2 id="java内存模型中堆和栈的区别"><a href="#java内存模型中堆和栈的区别" class="headerlink" title="java内存模型中堆和栈的区别"></a>java内存模型中堆和栈的区别</h2><p>联系：引用对象、数组时，栈里定义变量保存对中目标的首地址<br><img src="/2019/03/24/Java底层知识：JVM/2019-03-24_161159.png" alt></p>
+<p>管理方式：栈自动释放，堆需要GC</p>
+<p>空间大小：栈比堆小</p>
+<p>碎片相关：栈产生的碎片远小于堆</p>
+<p>分配方式：栈支持静态和动态分配，而堆仅支持动态分配</p>
+<p>效率：栈的效率比堆高</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/03/18/Git的add、commit、push命令/" rel="next" title="Git的add、commit、push命令">
+                <i class="fa fa-chevron-left"></i> Git的add、commit、push命令
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/03/24/Java垃圾回收机制/" rel="prev" title="Java垃圾回收机制">
+                Java垃圾回收机制 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+      
+        <div id="gitment-container"></div>
+      
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Satonito</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">22</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#谈谈你对Java的理解"><span class="nav-number">1.</span> <span class="nav-text">谈谈你对Java的理解</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#平台无关性"><span class="nav-number">2.</span> <span class="nav-text">平台无关性</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#如果实现java平台性"><span class="nav-number">2.1.</span> <span class="nav-text">如果实现java平台性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么JVM不直接将源码解析成机器码去执行"><span class="nav-number">2.2.</span> <span class="nav-text">为什么JVM不直接将源码解析成机器码去执行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#JVM如果加载-class文件"><span class="nav-number">2.3.</span> <span class="nav-text">JVM如果加载.class文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#谈谈反射"><span class="nav-number">2.4.</span> <span class="nav-text">谈谈反射</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#反射的简单例子"><span class="nav-number">2.5.</span> <span class="nav-text">反射的简单例子</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#类的加载方式"><span class="nav-number">2.6.</span> <span class="nav-text">类的加载方式</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#类加载器的双亲委派机制"><span class="nav-number">3.</span> <span class="nav-text">类加载器的双亲委派机制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#java类加载器分类详解"><span class="nav-number">3.1.</span> <span class="nav-text">java类加载器分类详解</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#类加载器的双亲委派加载机制"><span class="nav-number">3.2.</span> <span class="nav-text">类加载器的双亲委派加载机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#双亲委派模型的源码实现"><span class="nav-number">3.3.</span> <span class="nav-text">双亲委派模型的源码实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么要使用双亲委派机制去加载类"><span class="nav-number">3.4.</span> <span class="nav-text">为什么要使用双亲委派机制去加载类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#JVM-三大性能调优参数-Xms-Xmx-Xss"><span class="nav-number">3.5.</span> <span class="nav-text">JVM 三大性能调优参数-Xms -Xmx -Xss</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Java三种内存分配策略"><span class="nav-number">3.6.</span> <span class="nav-text">Java三种内存分配策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#java内存模型中堆和栈的区别"><span class="nav-number">3.7.</span> <span class="nav-text">java内存模型中堆和栈的区别</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Satonito</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
